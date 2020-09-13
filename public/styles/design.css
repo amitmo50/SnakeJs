@@ -1,0 +1,78 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color:#b2ebf2;
+}
+
+#main-container {
+  width: 1300px;
+  margin: auto;
+  margin-top: 20px;
+}
+
+
+.title{
+  color:#494D5F;
+  font-size: 50px;
+  text-align: center;
+  margin-bottom: 40px;
+  font-family: 'Ultra', serif;
+
+}
+.score-container {
+  color:#494D5F;
+  font-size: 30px;
+  text-align: center;
+  margin-bottom: 40px;
+  font-family: 'Ultra', serif;
+}
+
+.board-game{
+  border-style: solid; 
+  width: 1300px; 
+  height: 700px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cell {
+  width: 20px;
+  height: 20px;
+}
+.button-container{
+  text-align: center;
+  width: 10%;
+  margin-left: 45%;
+  /* position: absolute;
+  display: inline-block;
+  left: 48%;
+  top: 92%; */
+
+}
+.restart-btn {
+  font-family: 'Ultra', serif;
+  font-size: 1.5rem;
+  width: 100%;
+  margin-top: 2%;
+  border: 1px solid black;
+  border-radius: 5px;
+  background-color:#b2ebf2;
+}
+.start-btn{
+  font-family: 'Ultra', serif;
+  font-size: 1.5rem;
+  margin-top: 2%;
+  width: 100%;
+  border: 1px solid black;
+  border-radius: 5px;
+  background-color:#b2ebf2;
+}
+.restart-btn:hover {
+  background-color: #00bcd4;
+}
+.start-btn:hover {
+  background-color: #00bcd4;
+}
