@@ -32,7 +32,7 @@ class Board{
     button.classList.add('start-btn');
     restart.addEventListener('click', (e) => {
       this.restartGame();
-      button.innerHTML = 'Pause';
+      // button.innerHTML = 'Pause';
       e.target.style.display = 'none';
     });
     button.addEventListener('click', (e)=>{

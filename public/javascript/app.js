@@ -1,6 +1,7 @@
 class SnakeJs{
   constructor(options){
     this.positionList = {};
+    this.initPositionOfNodes = {};
     this.board = new Board({...options,
       changeStateGame: this.changeStateGame,
       restartGame: this.restartGame
@@ -11,6 +12,7 @@ class SnakeJs{
     this.numOfCols = options.numOfCols;
     this.numOfRows = options.numOfRows;
     this.gameSpeed = options.speedGame;
+    this.startSpeedGame = options.speedGame;
     this.numOfNodes = options.numOfNodes;
     this.endPositionRight = this.numOfCols - 1;
     this.endPositionLeft = -1;
@@ -19,10 +21,30 @@ class SnakeJs{
     this.score = document.querySelector('.score');
     this.moveSnakeOnBoard(Math.round(this.numOfRows/2), Math.round(this.numOfCols/2));
     
+    
   }
   restartGame = () => {
+    console.log('node position before reset',this.positionList);
     this.score.innerHTML = 0;
-    this.moveSnakeOnBoard(Math.round(this.numOfRows/2), Math.round(this.numOfCols/2));
+    
+    for(let j = 0; j < (this.numOfCols - 1) * (this.numOfRows - 2);j++){
+      this.board.cells[j].hideCell();
+    }
+    // Start in the initial Position
+    this.i = 1;
+    // console.log('start init');
+    clearInterval(this.intervalID);
+    this.positionList = this.initPositionOfNodes;
+    this.snake.setDirection('right');
+    console.log(this.initPositionOfNodes);
+    this.gameSpeed = this.startSpeedGame;
+    localStorage.setItem('Score', this.score.innerHTML);
+    this.snake.setPosition(Math.round(this.numOfRows/2), Math.round(this.numOfCols/2));
+    this.snakePosition = this.snake.getPosition();
+    this.board.cells[this.snakePosition].displayCell();
+    this.initRevilMultiNode(this.snakePosition, this.numOfNodes);
+    this.putFoodOnBoard();
+    //this.intervalID = setInterval(this.snakeStep, this.gameSpeed);  
   }
   changeStateGame = () =>{
     let button = document.querySelector('.start-btn');
@@ -30,6 +52,7 @@ class SnakeJs{
       this.gameOn = false;
     }else{
       this.gameOn  = true;
+      this.intervalID = setInterval(this.snakeStep,this.gameSpeed);
     }
   }
 
@@ -49,12 +72,14 @@ class SnakeJs{
 
   hideMultiNode = () =>{
     let countNode = 1;
-
     while(countNode < this.numOfNodes){
+
+      console.log(this.positionList)
+      console.log(this.board.cells[this.positionList[countNode]].id)
       this.board.cells[this.positionList[countNode]].hideCell();
       countNode++;
+      
     }
-
   }
 
   initRevilMultiNode = (snakePosition, numOfNodes) =>{
@@ -62,25 +87,26 @@ class SnakeJs{
     while(countNode > 0){
       this.board.cells[snakePosition - (numOfNodes - countNode)].displayCell();
       this.positionList[numOfNodes - countNode] = snakePosition - (numOfNodes - countNode);
+      this.initPositionOfNodes[numOfNodes - countNode] = snakePosition - (numOfNodes - countNode);
       countNode--;
     }
+    
+    
   }
   snakeStep = ()=>{
-    console.log(this.gameSpeed);
+    // console.log(this.gameSpeed);
     if(this.gameOn === true && (document.querySelector('.start-btn').innerHTML === 'Pause')){
       if(this.board.cells[this.foodPosition].getColor() === 'blue'){
         this.putFoodOnBoard();
-        console.log('before clearInterval',this.gameSpeed);
         clearInterval(this.intervalID);
         this.gameSpeed -= 10;
         this.score.innerHTML++;
         localStorage.setItem('Score', this.score.innerHTML);
         //this.numOfNodes += 1;
-        console.log('after clearInterval',this.gameSpeed);
         this.intervalID = setInterval(this.snakeStep,this.gameSpeed);
         return;
       }
-      console.log(this.gameOn);
+      //console.log(this.gameOn);
       if(this.snake.snakeDirection === 'right'){
           this.board.cells[this.snakePosition].hideCell();
           this.hideMultiNode();
@@ -110,7 +136,7 @@ class SnakeJs{
         this.board.cells[this.snakePosition].displayCell();
         this.revilMultiNode();
       
-        if(this.snake.currentCol  === this.endPositionLeft){
+        if(this.snake.currentCol === this.endPositionLeft){
           console.log('end');
           this.snake.currentCol = this.numOfCols - 2;
           this.board.cells[this.snakePosition].hideCell();
@@ -134,8 +160,8 @@ class SnakeJs{
           this.snake.currentRow = this.numOfRows - 2;
           this.board.cells[this.snakePosition].hideCell();
           this.hideMultiNode();
-          this.snakePosition = (this.snake.currentRow - 1) * (this.numOfCols - 1) + this.snake.currentCol;
           this.updatePositionList(this.snakePosition);
+          this.snakePosition = (this.snake.currentRow - 1) * (this.numOfCols - 1) + this.snake.currentCol;
           this.board.cells[this.snakePosition].displayCell();
           this.revilMultiNode();
         }
@@ -150,11 +176,11 @@ class SnakeJs{
   
         if(this.snake.currentRow === this.endPositionBottom){
           console.log('end');
-          this.board.cells[this.snakePosition].hideCell();
           this.snake.currentRow = 1;
+          this.board.cells[this.snakePosition].hideCell();
           this.hideMultiNode();
-          this.snakePosition = (this.snake.currentRow - 1) * (this.numOfCols - 1) + this.snake.currentCol;
           this.updatePositionList(this.snakePosition);
+          this.snakePosition = (this.snake.currentRow - 1) * (this.numOfCols - 1) + this.snake.currentCol;
           this.board.cells[this.snakePosition].displayCell();
           this.revilMultiNode();
         }
@@ -200,7 +226,6 @@ class SnakeJs{
 
   eventListenersList = () => {
     document.addEventListener('keydown', e => {
-      console.log(e.code);
       switch(e.code){
         case 'ArrowDown':
           this.snake.setDirection('down');
@@ -226,7 +251,7 @@ const game = new SnakeJs({
   numOfCols: 1300/20,
   numOfRows: 700/20,
   direction: 'right',
-  speedGame: 300,
+  speedGame: 400,
   numOfNodes: 3
   
 });

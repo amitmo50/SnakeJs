@@ -31,7 +31,7 @@ body {
 
 .board-game{
   border-style: solid; 
-  width: 1300px; 
+  width: 1290px; 
   height: 700px;
   display: flex;
   flex-wrap: wrap;
