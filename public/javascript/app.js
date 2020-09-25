@@ -1,7 +1,6 @@
 class SnakeJs{
   constructor(options){
     this.positionList = {};
-    this.initPositionOfNodes = {};
     this.board = new Board({...options,
       changeStateGame: this.changeStateGame,
       restartGame: this.restartGame
@@ -14,48 +13,73 @@ class SnakeJs{
     this.gameSpeed = options.speedGame;
     this.startSpeedGame = options.speedGame;
     this.numOfNodes = options.numOfNodes;
+    this.oringinNumOfNodes = options.numOfNodes;
     this.endPositionRight = this.numOfCols - 1;
     this.endPositionLeft = -1;
     this.endPositionTop = 1;
     this.endPositionBottom = this.numOfRows - 2;
     this.score = document.querySelector('.score');
+    this.highScore = document.querySelector('.high-score');
+    this.gameOverFlag = false;
     this.moveSnakeOnBoard(Math.round(this.numOfRows/2), Math.round(this.numOfCols/2));
-    
-    
   }
+
+  // Initialize the game when the game is up
+  moveSnakeOnBoard = (row,col) => {
+    this.eventListenersList();
+    if(this.gameOn){
+      // Start in the initial Position
+      this.i = 1;
+      localStorage.setItem('Score', this.score.innerHTML);
+      this.snake.setPosition(row,col);
+      this.snakePosition = this.snake.getPosition();
+      this.board.cells[this.snakePosition].displayCell();
+      this.initRevilMultiNode(this.snakePosition, this.numOfNodes);
+      this.putFoodOnBoard();
+      this.intervalID = setInterval(this.snakeStep, this.gameSpeed);
+      
+    }        
+  } 
+
+  // Restart all the game by clear all states and parameters
   restartGame = () => {
     console.log('node position before reset',this.positionList);
     this.score.innerHTML = 0;
-    
     for(let j = 0; j < (this.numOfCols - 1) * (this.numOfRows - 2);j++){
       this.board.cells[j].hideCell();
     }
     // Start in the initial Position
     this.i = 1;
-    // console.log('start init');
     clearInterval(this.intervalID);
-    this.positionList = this.initPositionOfNodes;
+    this.numOfNodes = this.oringinNumOfNodes;
+    this.positionList = this.oringinPositionList;
     this.snake.setDirection('right');
-    console.log(this.initPositionOfNodes);
     this.gameSpeed = this.startSpeedGame;
     localStorage.setItem('Score', this.score.innerHTML);
     this.snake.setPosition(Math.round(this.numOfRows/2), Math.round(this.numOfCols/2));
     this.snakePosition = this.snake.getPosition();
     this.board.cells[this.snakePosition].displayCell();
     this.initRevilMultiNode(this.snakePosition, this.numOfNodes);
-    this.putFoodOnBoard();
-    //this.intervalID = setInterval(this.snakeStep, this.gameSpeed);  
+    this.putFoodOnBoard(); 
   }
+
+  // Change the state of the gameOn flag
   changeStateGame = () =>{
     let button = document.querySelector('.start-btn');
     if(button.innerHTML === 'Start'){
       this.gameOn = false;
+      
     }else{
       this.gameOn  = true;
+      if(this.gameOverFlag === true){
+        const gameOverMessage = document.querySelector('.game-over-message');
+        document.querySelector('.board-game').parentNode.removeChild(gameOverMessage);
+      }
       this.intervalID = setInterval(this.snakeStep,this.gameSpeed);
     }
   }
-
+  
+  // Update to a dictionary all the nodes position on board
   updatePositionList = (snakePosition) => {
     let tempPosition1 = this.positionList[1];
     let tempPosition2; 
@@ -68,45 +92,95 @@ class SnakeJs{
       }
       
     }
+    
   }
 
+  // Hide all the nodes behind the snakePosition (the head)
   hideMultiNode = () =>{
     let countNode = 1;
     while(countNode < this.numOfNodes){
-
-      console.log(this.positionList)
-      console.log(this.board.cells[this.positionList[countNode]].id)
       this.board.cells[this.positionList[countNode]].hideCell();
       countNode++;
-      
     }
   }
+
 
   initRevilMultiNode = (snakePosition, numOfNodes) =>{
     let countNode = numOfNodes - 1;
     while(countNode > 0){
       this.board.cells[snakePosition - (numOfNodes - countNode)].displayCell();
       this.positionList[numOfNodes - countNode] = snakePosition - (numOfNodes - countNode);
-      this.initPositionOfNodes[numOfNodes - countNode] = snakePosition - (numOfNodes - countNode);
       countNode--;
     }
-    
+    this.oringinPositionList = this.positionList;
     
   }
+
+  // Display all nodes behind the snakePosition(the head of the snake)
+  revilMultiNode = () =>{
+    let countNode = 1;
+    while(countNode < this.numOfNodes){
+      if(typeof(this.board.cells[this.positionList[countNode]]) !== 'undefined'){
+        this.board.cells[this.positionList[countNode]].displayCell();
+        countNode++;
+      }
+    }
+  }
+  
+  // Add Node to snake after eat a fruit
+  addNodeToSnakeWhenEat = (snakeDirection) => {
+    let newPositionList = {};
+    let countNode = this.numOfNodes - 1;
+    newPositionList[1] = this.snakePosition;
+    while(countNode > 0){
+      this.board.cells[this.positionList[countNode]].hideCell();
+      newPositionList[(this.numOfNodes - countNode) + 1] = this.positionList[this.numOfNodes - countNode];
+      countNode--;
+    }
+    this.positionList = newPositionList;
+    if(snakeDirection === "right"){
+      this.snakePosition = this.snakePosition + 1;
+    }else if(snakeDirection === "left"){
+      this.snakePosition = this.snakePosition - 1;
+    }else if(snakeDirection === "up"){
+      this.snakePosition = this.snakePosition + 64;
+    }else{
+      this.snakePosition = this.snakePosition - 64; 
+    }
+    this.numOfNodes++;
+    this.updatePositionList(this.snakePosition);
+  }
+  
+  // Game Over function to handle a situation where the snake hit the walls
+  gameOver = () => {
+    const gameOverMessage = document.createElement('div');
+    gameOverMessage.innerHTML = 'Game Over!';
+    gameOverMessage.classList.add('game-over-message');
+    document.querySelector('.board-game').before(gameOverMessage);
+    this.gameOverFlag = true;
+    if(this.highScore.innerHTML < this.score.innerHTML){
+      this.highScore.innerHTML = this.score.innerHTML;
+    }
+    this.restartGame();
+    document.querySelector('.start-btn').innerHTML = "Start";
+    document.querySelector('.restart-btn').style.display = "block";
+    
+  }
+
+  // Snake Movements on board
   snakeStep = ()=>{
-    // console.log(this.gameSpeed);
     if(this.gameOn === true && (document.querySelector('.start-btn').innerHTML === 'Pause')){
       if(this.board.cells[this.foodPosition].getColor() === 'blue'){
+        console.log(this.snake.snakeDirection);
         this.putFoodOnBoard();
         clearInterval(this.intervalID);
         this.gameSpeed -= 10;
+        this.addNodeToSnakeWhenEat(this.snake.snakeDirection);
         this.score.innerHTML++;
         localStorage.setItem('Score', this.score.innerHTML);
-        //this.numOfNodes += 1;
         this.intervalID = setInterval(this.snakeStep,this.gameSpeed);
         return;
       }
-      //console.log(this.gameOn);
       if(this.snake.snakeDirection === 'right'){
           this.board.cells[this.snakePosition].hideCell();
           this.hideMultiNode();
@@ -117,17 +191,9 @@ class SnakeJs{
           this.revilMultiNode();
         // when get the borders of the game
         if(this.snake.currentCol === this.endPositionRight){
-          console.log('end');
-          this.board.cells[this.snakePosition].hideCell();
-          this.hideMultiNode();
-          this.snakePosition = (this.snake.currentRow - 1) * (this.numOfCols - 1);
-          this.updatePositionList(this.snakePosition);
-          this.board.cells[this.snakePosition].displayCell();
-          this.revilMultiNode();
-          this.snake.currentCol = 0;
+          this.gameOver();
         }
       } else if(this.snake.snakeDirection === 'left'){
-  
         this.board.cells[this.snakePosition].hideCell();
         this.hideMultiNode();
         this.snake.setPosition(this.snake.currentRow,this.snake.currentCol - this.i);
@@ -137,14 +203,7 @@ class SnakeJs{
         this.revilMultiNode();
       
         if(this.snake.currentCol === this.endPositionLeft){
-          console.log('end');
-          this.snake.currentCol = this.numOfCols - 2;
-          this.board.cells[this.snakePosition].hideCell();
-          this.hideMultiNode();
-          this.snakePosition = (this.snake.currentRow - 1) * (this.numOfCols - 1) + this.snake.currentCol;
-          this.updatePositionList(this.snakePosition);
-          this.board.cells[this.snakePosition].displayCell();
-          this.revilMultiNode();
+          this.gameOver();
         }
       }else if(this.snake.snakeDirection === 'up'){
         this.board.cells[this.snakePosition].hideCell();
@@ -156,14 +215,7 @@ class SnakeJs{
         this.revilMultiNode();
         
         if(this.snake.currentRow === this.endPositionTop){
-          console.log('end');
-          this.snake.currentRow = this.numOfRows - 2;
-          this.board.cells[this.snakePosition].hideCell();
-          this.hideMultiNode();
-          this.updatePositionList(this.snakePosition);
-          this.snakePosition = (this.snake.currentRow - 1) * (this.numOfCols - 1) + this.snake.currentCol;
-          this.board.cells[this.snakePosition].displayCell();
-          this.revilMultiNode();
+          this.gameOver();
         }
       }else if(this.snake.snakeDirection === 'down'){
         this.board.cells[this.snakePosition].hideCell();
@@ -176,54 +228,19 @@ class SnakeJs{
   
         if(this.snake.currentRow === this.endPositionBottom){
           console.log('end');
-          this.snake.currentRow = 1;
-          this.board.cells[this.snakePosition].hideCell();
-          this.hideMultiNode();
-          this.updatePositionList(this.snakePosition);
-          this.snakePosition = (this.snake.currentRow - 1) * (this.numOfCols - 1) + this.snake.currentCol;
-          this.board.cells[this.snakePosition].displayCell();
-          this.revilMultiNode();
+          this.gameOver();
         }
       }
-    }
-    
-  }
-  
-  revilMultiNode = () =>{
-    let countNode = 1;
-    while(countNode < this.numOfNodes){
-      if(typeof(this.board.cells[this.positionList[countNode]]) !== 'undefined'){
-        this.board.cells[this.positionList[countNode]].displayCell();
-        countNode++;
-      }
-    }
+    } 
   }
 
-  moveSnakeOnBoard = (row,col) => {
-    
-    this.eventListenersList();
-   
-    if(this.gameOn){
-      // Start in the initial Position
-      this.i = 1;
-      localStorage.setItem('Score', this.score.innerHTML);
-      this.snake.setPosition(row,col);
-      this.snakePosition = this.snake.getPosition();
-      this.board.cells[this.snakePosition].displayCell();
-      this.initRevilMultiNode(this.snakePosition, this.numOfNodes);
-      // this.updatePositionList(snakePosition-1);
-      this.putFoodOnBoard();
-      this.intervalID = setInterval(this.snakeStep, this.gameSpeed);
-      
-    }        
-  } 
-
+  // Put the food on board
   putFoodOnBoard = () => {
     this.foodPosition = Math.floor(Math.random() * 2112);
     this.board.cells[this.foodPosition].revilFood();
-    console.log('food position',this.board.cells[this.foodPosition]);
   }
 
+  // Keyboard event listener
   eventListenersList = () => {
     document.addEventListener('keydown', e => {
       switch(e.code){
@@ -242,6 +259,7 @@ class SnakeJs{
       }
     });
   }
+
 }
 
 
@@ -253,7 +271,6 @@ const game = new SnakeJs({
   direction: 'right',
   speedGame: 400,
   numOfNodes: 3
-  
 });
 
 
