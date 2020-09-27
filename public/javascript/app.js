@@ -137,6 +137,7 @@ class SnakeJs{
       newPositionList[(this.numOfNodes - countNode) + 1] = this.positionList[this.numOfNodes - countNode];
       countNode--;
     }
+    this.board.cells[this.snakePosition].hideCell();
     this.positionList = newPositionList;
     if(snakeDirection === "right"){
       this.snakePosition = this.snakePosition + 1;
@@ -190,7 +191,7 @@ class SnakeJs{
           this.board.cells[this.snakePosition].displayCell();
           this.revilMultiNode();
         // when get the borders of the game
-        if(this.snake.currentCol === this.endPositionRight){
+        if(this.snake.currentCol > this.endPositionRight){
           this.gameOver();
         }
       } else if(this.snake.snakeDirection === 'left'){
@@ -202,7 +203,7 @@ class SnakeJs{
         this.board.cells[this.snakePosition].displayCell();
         this.revilMultiNode();
       
-        if(this.snake.currentCol === this.endPositionLeft){
+        if(this.snake.currentCol < this.endPositionLeft){
           this.gameOver();
         }
       }else if(this.snake.snakeDirection === 'up'){
@@ -214,7 +215,7 @@ class SnakeJs{
         this.board.cells[this.snakePosition].displayCell();
         this.revilMultiNode();
         
-        if(this.snake.currentRow === this.endPositionTop){
+        if(this.snake.currentRow < this.endPositionTop){
           this.gameOver();
         }
       }else if(this.snake.snakeDirection === 'down'){
@@ -226,7 +227,7 @@ class SnakeJs{
         this.board.cells[this.snakePosition].displayCell();
         this.revilMultiNode();
   
-        if(this.snake.currentRow === this.endPositionBottom){
+        if(this.snake.currentRow > this.endPositionBottom){
           console.log('end');
           this.gameOver();
         }
